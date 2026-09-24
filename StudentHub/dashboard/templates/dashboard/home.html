@@ -1,0 +1,421 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudentHub</title>
+
+    <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+</head>
+
+<body>
+
+    <!-- Theme Button -->
+    <button id="themeToggle" onclick="toggleTheme()">
+        🌙 Dark Mode
+    </button>
+
+    <!-- Header -->
+    <header>
+        <h1>StudentHub</h1>
+        <p>Study smarter. Stay organized. Grow every day.</p>
+    </header>
+
+
+    <!-- Welcome Section -->
+    <section>
+        <h2>Welcome back, Student 👋</h2>
+        <p>Here's your study dashboard for today.</p>
+    </section>
+
+
+    <!-- Dashboard Cards -->
+    <main>
+
+        <!-- Today's Tasks -->
+        <div class="card">
+            <h2>📚 Today's Tasks</h2>
+
+            <ul>
+                {% for task in tasks %}
+                    <li>
+                        {{ task.title }}
+
+                        {% if not task.completed %}
+                            <a href="{% url 'complete_task' task.id %}">
+                                <button type="button">Complete</button>
+                            </a>
+                        {% else %}
+                            <strong>✅ Completed</strong>
+                        {% endif %}
+
+                        <a href="{% url 'delete_task' task.id %}">
+                            <button type="button">🗑️ Delete</button>
+                        </a>
+                    </li>
+
+                {% empty %}
+                    <li>No tasks added yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+        <!-- Add New Task -->
+        <div class="card">
+            <h2>➕ Add New Task</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="title"
+                    placeholder="Enter your task"
+                    required
+                >
+
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+
+
+        <!-- Quick Notes -->
+        <div class="card">
+            <h2>📝 Quick Notes</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <textarea
+                    name="content"
+                    placeholder="Write your note here..."
+                    rows="5"
+                    required
+                ></textarea>
+
+                <button type="submit">Save Note</button>
+            </form>
+
+            <br>
+
+            <button type="button" onclick="showNotes()">
+                📂 Saved Notes
+            </button>
+
+
+            <div
+                id="savedNotes"
+                style="display: none; margin-top: 20px;"
+            >
+
+                <h3>Saved Notes</h3>
+
+                <ul>
+                    {% for note in notes %}
+                        <li>
+                            {{ note.content }}
+
+                            <a href="{% url 'delete_note' note.id %}">
+                                <button type="button">
+                                    🗑️ Delete
+                                </button>
+                            </a>
+                        </li>
+
+                    {% empty %}
+                        <li>No notes saved yet.</li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- Study Planner -->
+        <div class="card">
+            <h2>📅 Study Planner</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="subject"
+                    placeholder="Enter subject"
+                    required
+                >
+
+                <br><br>
+
+                <input
+                    type="text"
+                    name="topic"
+                    placeholder="Enter topic"
+                    required
+                >
+
+                <br><br>
+
+                <label>Study Date:</label>
+
+                <input
+                    type="date"
+                    name="study_date"
+                    required
+                >
+
+                <br><br>
+
+                <label>Study Time:</label>
+
+                <input
+                    type="time"
+                    name="study_time"
+                    required
+                >
+
+                <br><br>
+
+                <button type="submit">
+                    📅 Add Study Plan
+                </button>
+            </form>
+
+            <hr>
+
+            <h3>My Study Plans</h3>
+
+            <ul>
+
+                {% for plan in study_plans %}
+
+                    <li>
+
+                        📚
+                        <strong>
+                            {{ plan.subject }}
+                        </strong>
+
+                        -
+                        {{ plan.topic }}
+
+                        <br>
+
+                        📅 {{ plan.study_date }}
+
+                        ⏰ {{ plan.study_time }}
+
+                        <br><br>
+
+
+                        {% if not plan.completed %}
+
+                            <a href="{% url 'complete_plan' plan.id %}">
+                                <button type="button">
+                                    ✅ Complete
+                                </button>
+                            </a>
+
+                        {% else %}
+
+                            <strong>
+                                ✅ Completed
+                            </strong>
+
+                        {% endif %}
+
+
+                        <a href="{% url 'delete_plan' plan.id %}">
+                            <button type="button">
+                                🗑️ Delete
+                            </button>
+                        </a>
+
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No study plans added yet.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+        <!-- Study Materials -->
+        <div class="card">
+
+            <h2>📂 Study Materials</h2>
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="material_title"
+                    placeholder="Enter material name"
+                    required
+                >
+
+                <br><br>
+
+                <input
+                    type="file"
+                    name="study_file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+                    required
+                >
+
+                <br><br>
+
+                <button type="submit">
+                    📤 Upload Material
+                </button>
+
+            </form>
+
+            <hr>
+
+            <h3>Saved Study Materials</h3>
+
+            <ul>
+
+                {% for material in materials %}
+
+                    <li>
+
+                        📄 {{ material.title }}
+
+                        <a
+                            href="{{ material.file.url }}"
+                            target="_blank"
+                        >
+                            <button type="button">
+                                📖 Open
+                            </button>
+                        </a>
+
+                        <a
+                            href="{% url 'delete_material' material.id %}"
+                        >
+                            <button type="button">
+                                🗑️ Delete
+                            </button>
+                        </a>
+
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No study materials uploaded yet.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+        <!-- Progress -->
+        <div class="card">
+
+            <h2>📊 Progress</h2>
+
+            <p>
+
+                <strong>
+                    {{ completed_tasks }}
+                </strong>
+
+                /
+
+                <strong>
+                    {{ total_tasks }}
+                </strong>
+
+                Tasks Completed
+
+            </p>
+
+
+            {% if total_tasks > 0 %}
+
+                <p>
+                    Keep going!
+                    You're making progress. 🚀
+                </p>
+
+            {% else %}
+
+                <p>
+                    No tasks yet.
+                    Add your first task! 📝
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </main>
+
+
+    <!-- JavaScript -->
+    <script>
+
+        function showNotes() {
+
+            const notes =
+                document.getElementById("savedNotes");
+
+            if (notes.style.display === "none") {
+
+                notes.style.display = "block";
+
+            } else {
+
+                notes.style.display = "none";
+
+            }
+        }
+
+
+        function toggleTheme() {
+
+            document.body.classList.toggle("dark-mode");
+
+            const button =
+                document.getElementById("themeToggle");
+
+
+            if (
+                document.body.classList.contains("dark-mode")
+            ) {
+
+                button.innerHTML = "☀️ Light Mode";
+
+            } else {
+
+                button.innerHTML = "🌙 Dark Mode";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+</html>
